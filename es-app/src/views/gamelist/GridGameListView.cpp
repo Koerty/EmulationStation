@@ -1,6 +1,9 @@
 #include "views/gamelist/GridGameListView.h"
 
+#include "views/UIModeController.h"
 #include "views/ViewController.h"
+#include "CollectionSystemManager.h"
+#include "Settings.h"
 #include "SystemData.h"
 
 GridGameListView::GridGameListView(Window* window, FileData* root) : ISimpleGameListView(window, root),
@@ -88,8 +91,18 @@ void GridGameListView::remove(FileData *game, bool deleteFile)
 std::vector<HelpPrompt> GridGameListView::getHelpPrompts()
 {
 	std::vector<HelpPrompt> prompts;
-	prompts.push_back(HelpPrompt("up/down/left/right", "scroll"));
+
+	if(Settings::getInstance()->getBool("QuickSystemSelect"))
+		prompts.push_back(HelpPrompt("lr", "system"));
+	prompts.push_back(HelpPrompt("up/down/left/right", "choose"));
 	prompts.push_back(HelpPrompt("a", "launch"));
 	prompts.push_back(HelpPrompt("b", "back"));
+	prompts.push_back(HelpPrompt("select", "options"));
+	prompts.push_back(HelpPrompt("x", "random"));
+	if(mRoot->getSystem()->isGameSystem() && !UIModeController::getInstance()->isUIModeKid())
+	{
+		std::string prompt = CollectionSystemManager::get()->getEditingCollection();
+		prompts.push_back(HelpPrompt("y", prompt));
+	}
 	return prompts;
 }
