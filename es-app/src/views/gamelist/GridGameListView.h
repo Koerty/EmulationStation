@@ -1,9 +1,9 @@
 #pragma once
+#ifndef ES_APP_VIEWS_GAME_LIST_GRID_GAME_LIST_VIEW_H
+#define ES_APP_VIEWS_GAME_LIST_GRID_GAME_LIST_VIEW_H
 
-#include "views/gamelist/ISimpleGameListView.h"
 #include "components/ImageGridComponent.h"
-#include "components/ImageComponent.h"
-#include <stack>
+#include "views/gamelist/ISimpleGameListView.h"
 
 class GridGameListView : public ISimpleGameListView
 {
@@ -24,6 +24,10 @@ public:
 
 protected:
 	virtual void populateList(const std::vector<FileData*>& files) override;
+	virtual void remove(FileData* game, bool deleteFile) override;
+	virtual void addPlaceholder();
 
 	ImageGridComponent<FileData*> mGrid;
 };
+
+#endif // ES_APP_VIEWS_GAME_LIST_GRID_GAME_LIST_VIEW_H

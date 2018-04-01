@@ -1,9 +1,9 @@
 #pragma once
+#ifndef ES_CORE_COMPONENTS_IMAGE_GRID_COMPONENT_H
+#define ES_CORE_COMPONENTS_IMAGE_GRID_COMPONENT_H
 
-#include "GuiComponent.h"
 #include "components/IList.h"
-#include "components/ImageComponent.h"
-#include "Log.h"
+#include "resources/TextureResource.h"
 
 struct ImageGridData
 {
@@ -37,52 +37,18 @@ public:
 
 	bool input(InputConfig* config, Input input) override;
 	void update(int deltaTime) override;
-	void render(const Eigen::Affine3f& parentTrans) override;
+	void render(const Transform4x4f& parentTrans) override;
 
 private:
-	Eigen::Vector2f getSquareSize(std::shared_ptr<TextureResource> tex = nullptr) const
+	// Calculate how much tiles of size mTileMaxSize we can fit in a grid of size mSize using a margin of size mMargin
+	Vector2i getGridDimension() const
 	{
-		Eigen::Vector2f aspect(1, 1);
-
-		if(tex)
-		{
-			const Eigen::Vector2i& texSize = tex->getSize();
-
-			if(texSize.x() > texSize.y())
-				aspect[0] = (float)texSize.x() / texSize.y();
-			else
-				aspect[1] = (float)texSize.y() / texSize.x();
-		}
-
-		return Eigen::Vector2f(156 * aspect.x(), 156 * aspect.y());
+		           // GRID_SIZE = COLUMNS * TILE_SIZE + (COLUMNS - 1) * MARGIN
+		           // <=> COLUMNS = (GRID_SIZE + MARGIN) / (TILE_SIZE + MARGIN)
+		return Vector2i((int) ((mSize.x() + mMargin.x()) / (mTileMaxSize.x() + mMargin.x())),
+						(int) ((mSize.y() + mMargin.y()) / (mTileMaxSize.y() + mMargin.y())));
 	};
 
-	Eigen::Vector2f getMaxSquareSize() const
-	{
-		Eigen::Vector2f squareSize(32, 32);
-
-		// calc biggest square size
-		for(auto it = mEntries.begin(); it != mEntries.end(); it++)
-		{
-			Eigen::Vector2f chkSize = getSquareSize(it->data.texture);
-			if(chkSize.x() > squareSize.x())
-				squareSize[0] = chkSize[0];
-			if(chkSize.y() > squareSize.y())
-				squareSize[1] = chkSize[1];
-		}
-
-		return squareSize;
-	};
-
-	Eigen::Vector2i getGridSize() const
-	{
-		Eigen::Vector2f squareSize = getMaxSquareSize();
-		Eigen::Vector2i gridSize(mSize.x() / (squareSize.x() + getPadding().x()), mSize.y() / (squareSize.y() + getPadding().y()));
-		return gridSize;
-	};
-
-	Eigen::Vector2f getPadding() const { return Eigen::Vector2f(24, 24); }
-	
 	void buildImages();
 	void updateImages();
 
@@ -90,13 +56,24 @@ private:
 
 	bool mEntriesDirty;
 
+	Vector2f mMargin;
+	Vector2f mTileMaxSize;
+	Vector2f mSelectedTileMaxSize;
+
 	std::vector<ImageComponent> mImages;
 };
 
 template<typename T>
 ImageGridComponent<T>::ImageGridComponent(Window* window) : IList<ImageGridData, T>(window)
 {
+	Vector2f screen = Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+
 	mEntriesDirty = true;
+
+	mSize = screen * 0.8f;
+	mMargin = screen * 0.01f;
+	mTileMaxSize = screen * 0.19f;
+	mSelectedTileMaxSize = mTileMaxSize + mMargin * 3.0f;
 }
 
 template<typename T>
@@ -115,7 +92,7 @@ bool ImageGridComponent<T>::input(InputConfig* config, Input input)
 {
 	if(input.value != 0)
 	{
-		Eigen::Vector2i dir = Eigen::Vector2i::Zero();
+		Vector2i dir = Vector2i::Zero();
 		if(config->isMappedTo("up", input))
 			dir[1] = -1;
 		else if(config->isMappedTo("down", input))
@@ -125,9 +102,9 @@ bool ImageGridComponent<T>::input(InputConfig* config, Input input)
 		else if(config->isMappedTo("right", input))
 			dir[0] = 1;
 
-		if(dir != Eigen::Vector2i::Zero())
+		if(dir != Vector2i::Zero())
 		{
-			listInput(dir.x() + dir.y() * getGridSize().x());
+			listInput(dir.x() + dir.y() * getGridDimension().x());
 			return true;
 		}
 	}else{
@@ -147,9 +124,9 @@ void ImageGridComponent<T>::update(int deltaTime)
 }
 
 template<typename T>
-void ImageGridComponent<T>::render(const Eigen::Affine3f& parentTrans)
+void ImageGridComponent<T>::render(const Transform4x4f& parentTrans)
 {
-	Eigen::Affine3f trans = getTransform() * parentTrans;
+	Transform4x4f trans = getTransform() * parentTrans;
 
 	if(mEntriesDirty)
 	{
@@ -158,16 +135,42 @@ void ImageGridComponent<T>::render(const Eigen::Affine3f& parentTrans)
 		mEntriesDirty = false;
 	}
 
+	// Dirty solution (took from updateImages function) to keep the selected image and render it later (on top of the others)
+	// Will be changed for a cleaner way with the introduction of GridTileComponent
+	Vector2i gridDimension = getGridDimension();
+
+	int cursorRow = mCursor / gridDimension.x();
+
+	int start = (cursorRow - (gridDimension.y() / 2)) * gridDimension.x();
+
+	//if we're at the end put the row as close as we can and no higher
+	if(start + (gridDimension.x() * gridDimension.y()) >= (int)mEntries.size())
+		start = gridDimension.x() * ((int)mEntries.size()/gridDimension.x() - gridDimension.y() + 1);
+
+	if(start < 0)
+		start = 0;
+
+	unsigned int i = (unsigned int)start;
+	ImageComponent* selectedImage = NULL;
 	for(auto it = mImages.begin(); it != mImages.end(); it++)
 	{
-		it->render(trans);
+		// If it's the selected image, keep it for later, otherwise render it now
+		if(i == (unsigned int)mCursor)
+			selectedImage = it.base();
+		else
+			it->render(trans);
+		i++;
 	}
+
+	// Render the selected image on top of the others
+	if (selectedImage != NULL)
+		selectedImage->render(trans);
 
 	GuiComponent::renderChildren(trans);
 }
 
 template<typename T>
-void ImageGridComponent<T>::onCursorChanged(const CursorState& state)
+void ImageGridComponent<T>::onCursorChanged(const CursorState& /*state*/)
 {
 	updateImages();
 }
@@ -179,31 +182,28 @@ void ImageGridComponent<T>::onSizeChanged()
 	updateImages();
 }
 
-// create and position imagecomponents (mImages)
+// Create and position imagecomponents (mImages)
 template<typename T>
 void ImageGridComponent<T>::buildImages()
 {
 	mImages.clear();
 
-	Eigen::Vector2i gridSize = getGridSize();
-	Eigen::Vector2f squareSize = getMaxSquareSize();
-	Eigen::Vector2f padding = getPadding();
+	Vector2i gridDimension = getGridDimension();
+	Vector2f startPosition = mTileMaxSize / 2;
+	Vector2f tileDistance = mTileMaxSize + mMargin;
 
-	// attempt to center within our size
-	Eigen::Vector2f totalSize(gridSize.x() * (squareSize.x() + padding.x()), gridSize.y() * (squareSize.y() + padding.y()));
-	Eigen::Vector2f offset(mSize.x() - totalSize.x(), mSize.y() - totalSize.y());
-	offset /= 2;
-
-	for(int y = 0; y < gridSize.y(); y++)
+	// Layout tile size and position
+	for(int y = 0; y < gridDimension.y(); y++)
 	{
-		for(int x = 0; x < gridSize.x(); x++)
+		for(int x = 0; x < gridDimension.x(); x++)
 		{
+			// Create tiles
 			mImages.push_back(ImageComponent(mWindow));
-			ImageComponent& image = mImages.at(y * gridSize.x() + x);
+			ImageComponent& image = mImages.at(y * gridDimension.x() + x);
 
-			image.setPosition((squareSize.x() + padding.x()) * (x + 0.5f) + offset.x(), (squareSize.y() + padding.y()) * (y + 0.5f) + offset.y());
+			image.setPosition(x * tileDistance.x() + startPosition.x(), y * tileDistance.y() + startPosition.y());
 			image.setOrigin(0.5f, 0.5f);
-			image.setResize(squareSize.x(), squareSize.y());
+			image.setMaxSize(mTileMaxSize);
 			image.setImage("");
 		}
 	}
@@ -215,16 +215,15 @@ void ImageGridComponent<T>::updateImages()
 	if(mImages.empty())
 		buildImages();
 
-	Eigen::Vector2i gridSize = getGridSize();
+	Vector2i gridDimension = getGridDimension();
 
-	int cursorRow = mCursor / gridSize.x();
-	int cursorCol = mCursor % gridSize.x();
+	int cursorRow = mCursor / gridDimension.x();
 
-	int start = (cursorRow - (gridSize.y() / 2)) * gridSize.x();
+	int start = (cursorRow - (gridDimension.y() / 2)) * gridDimension.x();
 
 	//if we're at the end put the row as close as we can and no higher
-	if(start + (gridSize.x() * gridSize.y()) >= (int)mEntries.size())
-		start = gridSize.x() * ((int)mEntries.size()/gridSize.x() - gridSize.y() + 1);
+	if(start + (gridDimension.x() * gridDimension.y()) >= (int)mEntries.size())
+		start = gridDimension.x() * ((int)mEntries.size()/gridDimension.x() - gridDimension.y() + 1);
 
 	if(start < 0)
 		start = 0;
@@ -239,17 +238,18 @@ void ImageGridComponent<T>::updateImages()
 			continue;
 		}
 
-		Eigen::Vector2f squareSize = getSquareSize(mEntries.at(i).data.texture);
-		if(i == mCursor)
+		if(i == (unsigned int)mCursor)
 		{
 			image.setColorShift(0xFFFFFFFF);
-			image.setResize(squareSize.x() + getPadding().x() * 0.95f, squareSize.y() + getPadding().y() * 0.95f);
+			image.setMaxSize(mSelectedTileMaxSize);
 		}else{
 			image.setColorShift(0xAAAAAABB);
-			image.setResize(squareSize.x(), squareSize.y());
+			image.setMaxSize(mTileMaxSize);
 		}
 
 		image.setImage(mEntries.at(i).data.texture);
 		i++;
 	}
 }
+
+#endif // ES_CORE_COMPONENTS_IMAGE_GRID_COMPONENT_H
