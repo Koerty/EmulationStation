@@ -249,9 +249,13 @@ void ImageGridComponent<T>::updateImages()
 
 	int start = (cursorRow - (gridDimension.y() / 2)) * gridDimension.x();
 
-	//if we're at the end put the row as close as we can and no higher
+	// If we are at the end put the row as close as we can and no higher
+	// E nb of entries, X grid x dim (nb column), Y grid y dim (nb line)
+	// start = first tile of last row - nb column * (nb line - 1)
+	//       = (E - 1) / X * X        - X * (Y - 1)
+	//       = X * ((E - 1) / X - Y + 1)
 	if(start + (gridDimension.x() * gridDimension.y()) >= (int)mEntries.size())
-		start = gridDimension.x() * ((int)mEntries.size()/gridDimension.x() - gridDimension.y() + 1);
+		start = gridDimension.x() * (((int)mEntries.size() - 1) / gridDimension.x() - gridDimension.y() + 1);
 
 	if(start < 0)
 		start = 0;
