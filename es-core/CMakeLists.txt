@@ -7,6 +7,7 @@ set(CORE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/GuiComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/HelpStyle.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/HttpReq.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/GridTileProperty.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ImageIO.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/InputConfig.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/InputManager.h
@@ -33,6 +34,7 @@ set(CORE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ComponentList.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/DateTimeComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/HelpComponent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/GridTileComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/IList.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ImageComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ImageGridComponent.h
@@ -63,6 +65,7 @@ set(CORE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/math/Vector4f.h
 
 	# Resources
+	${CMAKE_CURRENT_SOURCE_DIR}/src/resources/Color.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/resources/Font.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/resources/ResourceManager.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/resources/TextureResource.h
@@ -106,6 +109,7 @@ set(CORE_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ComponentList.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/DateTimeComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/HelpComponent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/GridTileComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ImageComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/MenuComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/NinePatchComponent.cpp
@@ -125,6 +129,7 @@ set(CORE_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/guis/GuiTextEditPopup.cpp
 
 	# Math
+	${CMAKE_CURRENT_SOURCE_DIR}/src/resources/Color.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/math/Misc.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/math/Transform4x4f.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/math/Vector2f.cpp

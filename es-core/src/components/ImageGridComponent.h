@@ -4,6 +4,7 @@
 
 #include "components/IList.h"
 #include "resources/TextureResource.h"
+#include "GridTileComponent.h"
 
 struct ImageGridData
 {
@@ -57,7 +58,7 @@ private:
 	void updateImages();
 
 	virtual void onCursorChanged(const CursorState& state);
-
+	
 	bool mEntriesDirty;
 
 	Vector2f mMargin;
@@ -65,7 +66,7 @@ private:
 	Vector2f mSelectedTileMaxSize;
 	Vector2i mGridDimension;
 
-	std::vector<ImageComponent> mImages;
+	std::vector< std::shared_ptr<GridTileComponent> > mTiles;
 };
 
 template<typename T>
@@ -128,6 +129,9 @@ template<typename T>
 void ImageGridComponent<T>::update(int deltaTime)
 {
 	listUpdate(deltaTime);
+
+	for (auto t = mTiles.begin(); t != mTiles.end(); t++)
+		(*t)->update(deltaTime);
 }
 
 template<typename T>
@@ -142,34 +146,20 @@ void ImageGridComponent<T>::render(const Transform4x4f& parentTrans)
 		mEntriesDirty = false;
 	}
 
-	// Dirty solution (took from updateImages function) to keep the selected image and render it later (on top of the others)
-	// Will be changed for a cleaner way with the introduction of GridTileComponent
-	int cursorRow = mCursor / mGridDimension.x();
-
-	int start = (cursorRow - (mGridDimension.y() / 2)) * mGridDimension.x();
-
-	//if we're at the end put the row as close as we can and no higher
-	if(start + (mGridDimension.x() * mGridDimension.y()) >= (int)mEntries.size())
-		start = mGridDimension.x() * ((int)mEntries.size()/mGridDimension.x() - mGridDimension.y() + 1);
-
-	if(start < 0)
-		start = 0;
-
-	unsigned int i = (unsigned int)start;
-	ImageComponent* selectedImage = NULL;
-	for(auto it = mImages.begin(); it != mImages.end(); it++)
+	std::shared_ptr<GridTileComponent> selectedTile = NULL;
+	for(auto it = mTiles.begin(); it != mTiles.end(); it++)
 	{
 		// If it's the selected image, keep it for later, otherwise render it now
-		if(i == (unsigned int)mCursor)
-			selectedImage = it.base();
+		std::shared_ptr<GridTileComponent> tile = (*it);
+		if(tile->isSelected())
+			selectedTile = tile;
 		else
-			it->render(trans);
-		i++;
+			tile->render(trans);
 	}
 
 	// Render the selected image on top of the others
-	if (selectedImage != NULL)
-		selectedImage->render(trans);
+	if (selectedTile != NULL)
+		selectedTile->render(trans);
 
 	GuiComponent::renderChildren(trans);
 }
@@ -215,11 +205,11 @@ void ImageGridComponent<T>::onSizeChanged()
 	updateImages();
 }
 
-// Create and position imagecomponents (mImages)
+// Create and position tiles (mTiles)
 template<typename T>
 void ImageGridComponent<T>::buildImages()
 {
-	mImages.clear();
+	mTiles.clear();
 
 	Vector2f startPosition = mTileMaxSize / 2;
 	Vector2f tileDistance = mTileMaxSize + mMargin;
@@ -230,13 +220,15 @@ void ImageGridComponent<T>::buildImages()
 		for(int x = 0; x < mGridDimension.x(); x++)
 		{
 			// Create tiles
-			mImages.push_back(ImageComponent(mWindow));
-			ImageComponent& image = mImages.at(y * mGridDimension.x() + x);
+			auto tile = std::make_shared<GridTileComponent>(mWindow);
+			tile->setPosition(x * tileDistance.x() + startPosition.x(), y * tileDistance.y() + startPosition.y());
+			tile->setOrigin(0.5f, 0.5f);
+			tile->setMaxSize(mTileMaxSize);
+			tile->setSelectedMaxSize(mSelectedTileMaxSize);
+			//tile->setResize(mTileMaxSize);
+			tile->setImage("");
 
-			image.setPosition(x * tileDistance.x() + startPosition.x(), y * tileDistance.y() + startPosition.y());
-			image.setOrigin(0.5f, 0.5f);
-			image.setMaxSize(mTileMaxSize);
-			image.setImage("");
+			mTiles.push_back(tile);
 		}
 	}
 }
@@ -244,7 +236,7 @@ void ImageGridComponent<T>::buildImages()
 template<typename T>
 void ImageGridComponent<T>::updateImages()
 {
-	if(mImages.empty())
+	if(mTiles.empty())
 		buildImages();
 
 	int cursorRow = mCursor / mGridDimension.x();
@@ -263,25 +255,31 @@ void ImageGridComponent<T>::updateImages()
 		start = 0;
 
 	unsigned int i = (unsigned int)start;
-	for(unsigned int img = 0; img < mImages.size(); img++)
+	for(unsigned int img = 0; img < mTiles.size(); img++)
 	{
-		ImageComponent& image = mImages.at(img);
+		std::shared_ptr<GridTileComponent> tile = mTiles.at(img);
 		if(i >= (unsigned int)size())
 		{
-			image.setImage("");
+			tile->setImage("");
+			tile->setVisible(false);
+			tile->setSelected(false);
 			continue;
 		}
 
 		if(i == (unsigned int)mCursor)
 		{
-			image.setColorShift(0xFFFFFFFF);
-			image.setMaxSize(mSelectedTileMaxSize);
+			//tile->setImageColorShift(0xFFFFFFFF);
+			//tile->setResize(mSelectedTileMaxSize);
+			tile->setSelected(true);
 		}else{
-			image.setColorShift(0xAAAAAABB);
-			image.setMaxSize(mTileMaxSize);
+			//tile->setImageColorShift(0xAAAAAABB);
+			//tile->setResize(mTileMaxSize);
+			tile->setSelected(false);
 		}
 
-		image.setImage(mEntries.at(i).data.texture);
+		tile->setImage(mEntries.at(i).data.texture);
+		tile->setVisible(true);
+
 		i++;
 	}
 }
