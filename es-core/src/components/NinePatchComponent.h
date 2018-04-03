@@ -37,8 +37,8 @@ public:
 
 	virtual void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties) override;
 
-private:
 	Vector2f getCornerSize() const;
+private:
 
 	void buildVertices();
 	void updateColors();
