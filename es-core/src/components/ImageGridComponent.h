@@ -42,12 +42,13 @@ public:
 
 private:
 	// Calculate how much tiles of size mTileMaxSize we can fit in a grid of size mSize using a margin of size mMargin
-	Vector2i getGridDimension() const
+	Vector2i calcGridDimension()
 	{
-		           // GRID_SIZE = COLUMNS * TILE_SIZE + (COLUMNS - 1) * MARGIN
-		           // <=> COLUMNS = (GRID_SIZE + MARGIN) / (TILE_SIZE + MARGIN)
-		return Vector2i((int) ((mSize.x() + mMargin.x()) / (mTileMaxSize.x() + mMargin.x())),
-						(int) ((mSize.y() + mMargin.y()) / (mTileMaxSize.y() + mMargin.y())));
+		// GRID_SIZE = COLUMNS * TILE_SIZE + (COLUMNS - 1) * MARGIN
+		// <=> COLUMNS = (GRID_SIZE + MARGIN) / (TILE_SIZE + MARGIN)
+		Vector2f gridDim = (mSize + mMargin) / (mTileMaxSize + mMargin);
+
+		mGridDimension = Vector2i((int) gridDim.x(), (int) gridDim.y());
 	};
 
 	void inline setDefaultSelectedTileMaxSize() { mSelectedTileMaxSize = mTileMaxSize * 1.15f; }
@@ -62,6 +63,7 @@ private:
 	Vector2f mMargin;
 	Vector2f mTileMaxSize;
 	Vector2f mSelectedTileMaxSize;
+	Vector2i mGridDimension;
 
 	std::vector<ImageComponent> mImages;
 };
@@ -77,6 +79,8 @@ ImageGridComponent<T>::ImageGridComponent(Window* window) : IList<ImageGridData,
 	mMargin = screen * 0.01f;
 	mTileMaxSize = screen * 0.19f;
 	setDefaultSelectedTileMaxSize();
+
+	calcGridDimension();
 }
 
 template<typename T>
@@ -107,7 +111,7 @@ bool ImageGridComponent<T>::input(InputConfig* config, Input input)
 
 		if(dir != Vector2i::Zero())
 		{
-			listInput(dir.x() + dir.y() * getGridDimension().x());
+			listInput(dir.x() + dir.y() * mGridDimension.x());
 			return true;
 		}
 	}else{
@@ -140,15 +144,13 @@ void ImageGridComponent<T>::render(const Transform4x4f& parentTrans)
 
 	// Dirty solution (took from updateImages function) to keep the selected image and render it later (on top of the others)
 	// Will be changed for a cleaner way with the introduction of GridTileComponent
-	Vector2i gridDimension = getGridDimension();
+	int cursorRow = mCursor / mGridDimension.x();
 
-	int cursorRow = mCursor / gridDimension.x();
-
-	int start = (cursorRow - (gridDimension.y() / 2)) * gridDimension.x();
+	int start = (cursorRow - (mGridDimension.y() / 2)) * mGridDimension.x();
 
 	//if we're at the end put the row as close as we can and no higher
-	if(start + (gridDimension.x() * gridDimension.y()) >= (int)mEntries.size())
-		start = gridDimension.x() * ((int)mEntries.size()/gridDimension.x() - gridDimension.y() + 1);
+	if(start + (mGridDimension.x() * mGridDimension.y()) >= (int)mEntries.size())
+		start = mGridDimension.x() * ((int)mEntries.size()/mGridDimension.x() - mGridDimension.y() + 1);
 
 	if(start < 0)
 		start = 0;
@@ -195,6 +197,9 @@ void ImageGridComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, 
 		mSelectedTileMaxSize = elem->get<Vector2f>("selectedTileMaxSize") * screen;
 	else
 		setDefaultSelectedTileMaxSize();
+
+	// Recalculate grid dimension after theme changed
+	calcGridDimension();
 }
 
 template<typename T>
@@ -216,18 +221,17 @@ void ImageGridComponent<T>::buildImages()
 {
 	mImages.clear();
 
-	Vector2i gridDimension = getGridDimension();
 	Vector2f startPosition = mTileMaxSize / 2;
 	Vector2f tileDistance = mTileMaxSize + mMargin;
 
 	// Layout tile size and position
-	for(int y = 0; y < gridDimension.y(); y++)
+	for(int y = 0; y < mGridDimension.y(); y++)
 	{
-		for(int x = 0; x < gridDimension.x(); x++)
+		for(int x = 0; x < mGridDimension.x(); x++)
 		{
 			// Create tiles
 			mImages.push_back(ImageComponent(mWindow));
-			ImageComponent& image = mImages.at(y * gridDimension.x() + x);
+			ImageComponent& image = mImages.at(y * mGridDimension.x() + x);
 
 			image.setPosition(x * tileDistance.x() + startPosition.x(), y * tileDistance.y() + startPosition.y());
 			image.setOrigin(0.5f, 0.5f);
@@ -243,19 +247,17 @@ void ImageGridComponent<T>::updateImages()
 	if(mImages.empty())
 		buildImages();
 
-	Vector2i gridDimension = getGridDimension();
+	int cursorRow = mCursor / mGridDimension.x();
 
-	int cursorRow = mCursor / gridDimension.x();
-
-	int start = (cursorRow - (gridDimension.y() / 2)) * gridDimension.x();
+	int start = (cursorRow - (mGridDimension.y() / 2)) * mGridDimension.x();
 
 	// If we are at the end put the row as close as we can and no higher
 	// E nb of entries, X grid x dim (nb column), Y grid y dim (nb line)
 	// start = first tile of last row - nb column * (nb line - 1)
 	//       = (E - 1) / X * X        - X * (Y - 1)
 	//       = X * ((E - 1) / X - Y + 1)
-	if(start + (gridDimension.x() * gridDimension.y()) >= (int)mEntries.size())
-		start = gridDimension.x() * (((int)mEntries.size() - 1) / gridDimension.x() - gridDimension.y() + 1);
+	if(start + (mGridDimension.x() * mGridDimension.y()) >= (int)mEntries.size())
+		start = mGridDimension.x() * (((int)mEntries.size() - 1) / mGridDimension.x() - mGridDimension.y() + 1);
 
 	if(start < 0)
 		start = 0;
