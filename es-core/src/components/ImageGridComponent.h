@@ -38,6 +38,7 @@ public:
 	bool input(InputConfig* config, Input input) override;
 	void update(int deltaTime) override;
 	void render(const Transform4x4f& parentTrans) override;
+	virtual void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties) override;
 
 private:
 	// Calculate how much tiles of size mTileMaxSize we can fit in a grid of size mSize using a margin of size mMargin
@@ -48,6 +49,8 @@ private:
 		return Vector2i((int) ((mSize.x() + mMargin.x()) / (mTileMaxSize.x() + mMargin.x())),
 						(int) ((mSize.y() + mMargin.y()) / (mTileMaxSize.y() + mMargin.y())));
 	};
+
+	void inline setDefaultSelectedTileMaxSize() { mSelectedTileMaxSize = mTileMaxSize * 1.15f; }
 
 	void buildImages();
 	void updateImages();
@@ -70,10 +73,10 @@ ImageGridComponent<T>::ImageGridComponent(Window* window) : IList<ImageGridData,
 
 	mEntriesDirty = true;
 
-	mSize = screen * 0.8f;
+	mSize = screen * 0.79f;
 	mMargin = screen * 0.01f;
 	mTileMaxSize = screen * 0.19f;
-	mSelectedTileMaxSize = mTileMaxSize + mMargin * 3.0f;
+	setDefaultSelectedTileMaxSize();
 }
 
 template<typename T>
@@ -167,6 +170,31 @@ void ImageGridComponent<T>::render(const Transform4x4f& parentTrans)
 		selectedImage->render(trans);
 
 	GuiComponent::renderChildren(trans);
+}
+
+template<typename T>
+void ImageGridComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties)
+{
+	GuiComponent::applyTheme(theme, view, element, properties);
+
+	const ThemeData::ThemeElement* elem = theme->getElement(view, element, "imagegrid");
+	if(!elem)
+		return;
+
+	using namespace ThemeFlags;
+
+	Vector2f screen = Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+
+	if (elem->has("margin"))
+		mMargin = elem->get<Vector2f>("margin") * screen;
+
+	if (elem->has("tileMaxSize"))
+		mTileMaxSize = elem->get<Vector2f>("tileMaxSize") * screen;
+
+	if (elem->has("selectedTileMaxSize"))
+		mSelectedTileMaxSize = elem->get<Vector2f>("selectedTileMaxSize") * screen;
+	else
+		setDefaultSelectedTileMaxSize();
 }
 
 template<typename T>

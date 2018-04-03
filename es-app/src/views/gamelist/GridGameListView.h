@@ -10,7 +10,7 @@ class GridGameListView : public ISimpleGameListView
 public:
 	GridGameListView(Window* window, FileData* root);
 
-	//virtual void onThemeChanged(const std::shared_ptr<ThemeData>& theme) override;
+	virtual void onThemeChanged(const std::shared_ptr<ThemeData>& theme) override;
 
 	virtual FileData* getCursor() override;
 	virtual void setCursor(FileData*) override;

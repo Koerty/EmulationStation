@@ -10,10 +10,20 @@ GridGameListView::GridGameListView(Window* window, FileData* root) : ISimpleGame
 	mGrid(window)
 {
 	mGrid.setPosition(mSize.x() * 0.1f, mSize.y() * 0.1f);
-//	mGrid.setSize(mSize.x(), mSize.y() * 0.8f);
 	addChild(&mGrid);
 
 	populateList(root->getChildrenListToDisplay());
+}
+
+void GridGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
+{
+	ISimpleGameListView::onThemeChanged(theme);
+
+	using namespace ThemeFlags;
+
+	mGrid.applyTheme(theme, getName(), "gamegrid", ALL);
+
+	sortChildren();
 }
 
 FileData* GridGameListView::getCursor()
