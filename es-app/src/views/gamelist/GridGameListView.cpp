@@ -84,7 +84,7 @@ void GridGameListView::addPlaceholder()
 
 void GridGameListView::launch(FileData* game)
 {
-	ViewController::get()->launch(game);
+	ViewController::get()->launch(game, mGrid.getSelectedTilePosition());
 }
 
 void GridGameListView::remove(FileData *game, bool deleteFile)

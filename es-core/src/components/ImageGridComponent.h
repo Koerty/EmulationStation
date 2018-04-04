@@ -40,6 +40,8 @@ public:
 	void render(const Transform4x4f& parentTrans) override;
 	virtual void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties) override;
 
+	Vector3f getSelectedTilePosition();
+
 private:
 	// Calculate how much tiles of size mTileMaxSize we can fit in a grid of size mSize using a margin of size mMargin
 	Vector2i calcGridDimension()
@@ -284,6 +286,34 @@ void ImageGridComponent<T>::updateImages()
 		image.setImage(mEntries.at(i).data.texture);
 		i++;
 	}
+}
+
+template<typename T>
+Vector3f ImageGridComponent<T>::getSelectedTilePosition()
+{
+	// Dirty solution (took from updateImages function) to keep the selected image and render it later (on top of the others)
+	// Will be changed for a cleaner way with the introduction of GridTileComponent
+	int cursorRow = mCursor / mGridDimension.x();
+
+	int start = (cursorRow - (mGridDimension.y() / 2)) * mGridDimension.x();
+
+	//if we're at the end put the row as close as we can and no higher
+	if(start + (mGridDimension.x() * mGridDimension.y()) >= (int)mEntries.size())
+		start = mGridDimension.x() * ((int)mEntries.size()/mGridDimension.x() - mGridDimension.y() + 1);
+
+	if(start < 0)
+		start = 0;
+
+	unsigned int i = (unsigned int)start;
+	for(auto it = mImages.begin(); it != mImages.end(); it++)
+	{
+		if(i == (unsigned int)mCursor)
+			return (*it).getPosition();
+
+		i++;
+	}
+
+	return Vector3f(Renderer::getScreenWidth() / 2.0f, Renderer::getScreenHeight() / 2.0f, 0);
 }
 
 #endif // ES_CORE_COMPONENTS_IMAGE_GRID_COMPONENT_H
