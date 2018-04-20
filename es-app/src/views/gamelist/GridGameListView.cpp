@@ -118,7 +118,7 @@ void GridGameListView::populateList(const std::vector<FileData*>& files)
 	{
 		for (auto it = files.cbegin(); it != files.cend(); it++)
 		{
-			mGrid.add((*it)->getName(), (*it)->getThumbnailPath(), *it);
+			mGrid.add((*it)->getName(), (*it)->getThumbnailPath(), (*it)->getVideoPath(), *it);
 		}
 	}
 	else
@@ -293,7 +293,7 @@ void GridGameListView::addPlaceholder()
 {
 	// empty grid - add a placeholder
 	FileData* placeholder = new FileData(PLACEHOLDER, "<No Entries Found>", this->mRoot->getSystem()->getSystemEnvData(), this->mRoot->getSystem());
-	mGrid.add(placeholder->getName(), "", placeholder);
+	mGrid.add(placeholder->getName(), "", "", placeholder);
 }
 
 void GridGameListView::launch(FileData* game)

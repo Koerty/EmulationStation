@@ -15,6 +15,8 @@ enum ScrollDirection
 
 struct ImageGridData
 {
+	std::string imagePath;
+	std::string videoPath;
 	std::shared_ptr<TextureResource> texture;
 };
 
@@ -39,7 +41,7 @@ public:
 
 	ImageGridComponent(Window* window);
 
-	void add(const std::string& name, const std::string& imagePath, const T& obj);
+	void add(const std::string& name, const std::string& imagePath, const std::string& videoPath, const T& obj);
 
 	bool input(InputConfig* config, Input input) override;
 	void update(int deltaTime) override;
@@ -96,7 +98,7 @@ ImageGridComponent<T>::ImageGridComponent(Window* window) : IList<ImageGridData,
 }
 
 template<typename T>
-void ImageGridComponent<T>::add(const std::string& name, const std::string& imagePath, const T& obj)
+void ImageGridComponent<T>::add(const std::string& name, const std::string& imagePath, const std::string& videoPath, const T& obj)
 {
 	typename IList<ImageGridData, T>::Entry entry;
 	entry.name = name;
@@ -116,6 +118,8 @@ void ImageGridComponent<T>::add(const std::string& name, const std::string& imag
 			entry.data.texture = mDefaultGameTexture;
 	}
 
+	entry.data.imagePath = imagePath;
+	entry.data.videoPath = videoPath;
 	static_cast<IList< ImageGridData, T >*>(this)->add(entry);
 	mEntriesDirty = true;
 }
@@ -156,7 +160,7 @@ void ImageGridComponent<T>::update(int deltaTime)
 	listUpdate(deltaTime);
 
 	for(auto it = mTiles.begin(); it != mTiles.end(); it++)
-		(*it)->update();
+		(*it)->update(deltaTime);
 }
 
 template<typename T>
@@ -308,7 +312,7 @@ void ImageGridComponent<T>::buildTiles()
 
 			tile->setPosition(X * tileDistance.x() + startPosition.x(), Y * tileDistance.y() + startPosition.y());
 			tile->setOrigin(0.5f, 0.5f);
-			tile->setImage("");
+			tile->setImage("", "");
 
 			if (mTheme)
 				tile->applyTheme(mTheme, "grid", "gridtile", ThemeFlags::ALL);
@@ -334,13 +338,16 @@ void ImageGridComponent<T>::updateTiles()
 		if(img >= size())
 		{
 			tile->setSelected(false);
-			tile->setImage("");
+			tile->setImage("", "");
 			tile->setVisible(false);
 			continue;
 		}
 
 		tile->setSelected(img == mCursor);
-		tile->setImage(mEntries.at(img).data.texture);
+
+		tile->setImage(mEntries.at(img).data.imagePath, mEntries.at(img).data.videoPath);
+
+		//tile->setImage(mEntries.at(img).data.texture);
 		tile->setVisible(true);
 
 		img++;

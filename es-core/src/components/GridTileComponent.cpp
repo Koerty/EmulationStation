@@ -3,8 +3,9 @@
 #include "resources/TextureResource.h"
 #include "ThemeData.h"
 #include "Renderer.h"
+#include "VideoVlcComponent.h"
 
-GridTileComponent::GridTileComponent(Window* window) : GuiComponent(window), mBackground(window)
+GridTileComponent::GridTileComponent(Window* window) : GuiComponent(window), mBackground(window), mVideo(nullptr)
 {
 	mDefaultProperties.mSize = getDefaultTileSize();
 	mDefaultProperties.mPadding = Vector2f(16.0f, 16.0f);
@@ -21,10 +22,25 @@ GridTileComponent::GridTileComponent(Window* window) : GuiComponent(window), mBa
 	mImage = std::make_shared<ImageComponent>(mWindow);
 	mImage->setOrigin(0.5f, 0.5f);
 
+	// Create the correct type of video window
+#ifdef _RPI_
+	if (Settings::getInstance()->getBool("VideoOmxPlayer"))
+		mVideo = new VideoPlayerComponent(window, "");
+	else
+		mVideo = new VideoVlcComponent(window, getTitlePath());
+#else
+	mVideo = new VideoVlcComponent(window, getTitlePath());
+#endif
+
+	// TODO delete video in destructor
+
+	mVideo->setOrigin(0.5f, 0.5f);
+
 	mBackground.setOrigin(0.5f, 0.5f);
 
 	addChild(&mBackground);
 	addChild(&(*mImage));
+	addChild(mVideo);
 
 	setSelected(false);
 	setVisible(true);
@@ -39,7 +55,7 @@ void GridTileComponent::render(const Transform4x4f& parentTrans)
 }
 
 // Update all the tile properties to the new status (selected or default)
-void GridTileComponent::update()
+void GridTileComponent::update(int deltaTime)
 {
 	const GridTileProperties& currentProperties = getCurrentProperties();
 
@@ -50,6 +66,8 @@ void GridTileComponent::update()
 	mBackground.setEdgeColor(currentProperties.mBackgroundColor);
 
 	resize();
+
+	mVideo->update(deltaTime);
 }
 
 void GridTileComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties)
@@ -115,9 +133,23 @@ bool GridTileComponent::isSelected() const
 	return mSelected;
 }
 
-void GridTileComponent::setImage(const std::string& path)
+void GridTileComponent::setImage(const std::string& imagePath, const std::string& videoPath)
 {
-	mImage->setImage(path);
+	mImage->setImage(imagePath);
+
+	if (mSelected)
+	{
+		mVideo->setVideo(videoPath);
+		mVideo->setImage(imagePath);
+	}
+	else
+	{
+		mVideo->setVideo("");
+		mVideo->setImage("");
+	}
+
+	resize();
+//	mImage->setImage(path);
 }
 
 void GridTileComponent::setImage(const std::shared_ptr<TextureResource>& texture)
@@ -130,6 +162,20 @@ void GridTileComponent::setImage(const std::shared_ptr<TextureResource>& texture
 
 void GridTileComponent::setSelected(bool selected)
 {
+	if (mSelected != selected)
+	{
+		if (selected)
+		{
+			mImage->setOpacity(0);
+			mVideo->onShow();
+		}
+		else
+		{
+			mImage->setOpacity(255); // TODO do not do that as it break theme defined alpha
+			mVideo->onHide();
+		}
+	}
+
 	mSelected = selected;
 }
 
@@ -143,6 +189,7 @@ void GridTileComponent::resize()
 	const GridTileProperties& currentProperties = getCurrentProperties();
 
 	mImage->setMaxSize(currentProperties.mSize - currentProperties.mPadding);
+	mVideo->setMaxSize(currentProperties.mSize - currentProperties.mPadding);
 	mBackground.fitTo(currentProperties.mSize - Vector2f(32.0f, 32.0f)); // (32f, 32f) the NinePatchComponent natural padding
 	mBackground.setPosition(getSize().x() / 2, getSize().y() / 2);
 }
