@@ -6,7 +6,7 @@
 #include "ThemeData.h"
 
 NinePatchComponent::NinePatchComponent(Window* window, const std::string& path, unsigned int edgeColor, unsigned int centerColor) : GuiComponent(window),
-	mCornerSize(16, 16),
+	mBorderSize(16, 16, 16, 16),
 	mEdgeColor(edgeColor), mCenterColor(centerColor),
 	mPath(path),
 	mVertices(NULL), mColors(NULL)
@@ -54,14 +54,27 @@ void NinePatchComponent::buildVertices()
 
 	const Vector2f texSize = Vector2f((float)mTexture->getSize().x(), (float)mTexture->getSize().y());
 
-	float imgSizeX[3] = {mCornerSize.x(), mSize.x() - mCornerSize.x() * 2, mCornerSize.x()};
-	float imgSizeY[3] = {mCornerSize.y(), mSize.y() - mCornerSize.y() * 2, mCornerSize.y()};
+	// mBorderSize.x = left, y = top, z = right, w = bottom
+	float imgSizeX[3] = {mBorderSize.x(),
+						 mSize.x() - mBorderSize.x() - mBorderSize.z(),
+						 mBorderSize.z()};
+
+	float imgSizeY[3] = {mBorderSize.y(),
+						 mSize.y() - mBorderSize.y() - mBorderSize.w(),
+						 mBorderSize.w()};
+
 	float imgPosX[3] = {0, imgSizeX[0], imgSizeX[0] + imgSizeX[1]};
 	float imgPosY[3] = {0, imgSizeY[0], imgSizeY[0] + imgSizeY[1]};
 
 	//the "1 +" in posY and "-" in sizeY is to deal with texture coordinates having a bottom left corner origin vs. verticies having a top left origin
-	float texSizeX[3] = {mCornerSize.x() / texSize.x(), (texSize.x() - mCornerSize.x() * 2) / texSize.x(), mCornerSize.x() / texSize.x()};
-	float texSizeY[3] = {-mCornerSize.y() / texSize.y(), -(texSize.y() - mCornerSize.y() * 2) / texSize.y(), -mCornerSize.y() / texSize.y()};
+	float texSizeX[3] = {mBorderSize.x() / texSize.x(),
+						 (texSize.x() - mBorderSize.x() - mBorderSize.z()) / texSize.x(),
+						 mBorderSize.z() / texSize.x()};
+
+	float texSizeY[3] = {-mBorderSize.y() / texSize.y(),
+						 -(texSize.y() - mBorderSize.y() - mBorderSize.w()) / texSize.y(),
+						 -mBorderSize.w() / texSize.y()};
+
 	float texPosX[3] = {0, texSizeX[0], texSizeX[0] + texSizeX[1]};
 	float texPosY[3] = {1, 1 + texSizeY[0], 1 + texSizeY[0] + texSizeY[1]};
 
@@ -144,12 +157,12 @@ void NinePatchComponent::onSizeChanged()
 
 const Vector2f& NinePatchComponent::getCornerSize() const
 {
-	return mCornerSize;
+	return Vector2f(mBorderSize.x() + mBorderSize.z(), mBorderSize.y() + mBorderSize.w());
 }
 
-void NinePatchComponent::setCornerSize(int sizeX, int sizeY)
+void NinePatchComponent::setBorderSize(int left, int top, int right, int bot)
 {
-	mCornerSize = Vector2f(sizeX, sizeY);
+	mBorderSize = Vector4f(left, top, right, bot);
 	buildVertices();
 }
 
@@ -159,8 +172,8 @@ void NinePatchComponent::fitTo(Vector2f size, Vector3f position, Vector2f paddin
 	position[0] -= padding.x() / 2;
 	position[1] -= padding.y() / 2;
 
-	setSize(size + mCornerSize * 2);
-	setPosition(-mCornerSize.x() + position.x(), -mCornerSize.y() + position.y());
+	setSize(size + getCornerSize());
+	setPosition(-mBorderSize.x() + position.x(), -mBorderSize.y() + position.y());
 }
 
 void NinePatchComponent::setImagePath(const std::string& path)
