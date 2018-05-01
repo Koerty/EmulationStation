@@ -155,7 +155,7 @@ void NinePatchComponent::onSizeChanged()
 	buildVertices();
 }
 
-const Vector2f& NinePatchComponent::getCornerSize() const
+Vector2f NinePatchComponent::getCornerSize() const
 {
 	return Vector2f(mBorderSize.x() + mBorderSize.z(), mBorderSize.y() + mBorderSize.w());
 }
