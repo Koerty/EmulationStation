@@ -66,6 +66,7 @@ private:
 	std::shared_ptr<TextureResource> mDefaultFolderTexture;
 
 	// TILES
+	bool mLastRowPartial;
 	Vector2f mMargin;
 	Vector2f mTileSize;
 	Vector2i mGridDimension;
@@ -91,8 +92,6 @@ ImageGridComponent<T>::ImageGridComponent(Window* window) : IList<ImageGridData,
 	mTileSize = GridTileComponent::getDefaultTileSize();
 
 	mScrollDirection = SCROLL_VERTICALLY;
-
-	calcGridDimension();
 }
 
 template<typename T>
@@ -166,10 +165,20 @@ void ImageGridComponent<T>::render(const Transform4x4f& parentTrans)
 
 	if(mEntriesDirty)
 	{
-		buildTiles();
 		updateTiles();
 		mEntriesDirty = false;
 	}
+
+	// Create a clipRect to hide tiles used to buffer texture loading
+	float scaleX = trans.r0().x();
+	float scaleY = trans.r1().y();
+
+	Vector2i pos((int)Math::round(trans.translation()[0]), (int)Math::round(trans.translation()[1]));
+	Vector2i size((int)Math::round(mSize.x() * scaleX), (int)Math::round(mSize.y() * scaleY));
+
+	Renderer::pushClipRect(pos, size);
+
+	// Render all the tiles but the selected one
 
 	std::shared_ptr<GridTileComponent> selectedTile = NULL;
 	for(auto it = mTiles.begin(); it != mTiles.end(); it++)
@@ -183,6 +192,8 @@ void ImageGridComponent<T>::render(const Transform4x4f& parentTrans)
 			tile->render(trans);
 	}
 
+	Renderer::popClipRect();
+
 	// Render the selected image on top of the others
 	if (selectedTile != NULL)
 		selectedTile->render(trans);
@@ -193,7 +204,10 @@ void ImageGridComponent<T>::render(const Transform4x4f& parentTrans)
 template<typename T>
 void ImageGridComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties)
 {
-	GuiComponent::applyTheme(theme, view, element, properties);
+	using namespace ThemeFlags;
+
+	// Apply theme to GuiComponent but not size property, which will be applied at the end of this function
+	GuiComponent::applyTheme(theme, view, element, properties ^ SIZE);
 
 	// Keep the theme pointer to apply it on the tiles later on
 	mTheme = theme;
@@ -262,8 +276,12 @@ void ImageGridComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, 
 				elem->get<Vector2f>("size") * screen :
 				GridTileComponent::getDefaultTileSize();
 
-	// Recalculate grid dimension after theme changed
-	calcGridDimension();
+	// Apply size property, will trigger a call to onSizeChanged() which will build the tiles
+	GuiComponent::applyTheme(theme, view, element, SIZE);
+
+	// Trigger the call manually if the theme have no "imagegrid" element
+	if (!elem)
+		buildTiles();
 }
 
 template<typename T>
@@ -287,6 +305,8 @@ template<typename T>
 void ImageGridComponent<T>::buildTiles()
 {
 	mTiles.clear();
+
+	calcGridDimension();
 
 	Vector2f startPosition = mTileSize / 2;
 	Vector2f tileDistance = mTileSize + mMargin;
@@ -321,8 +341,8 @@ void ImageGridComponent<T>::buildTiles()
 template<typename T>
 void ImageGridComponent<T>::updateTiles()
 {
-	if(mTiles.empty())
-		buildTiles();
+	if (!mTiles.size())
+		return;
 
 	int img = getStartPosition();
 
@@ -351,17 +371,24 @@ void ImageGridComponent<T>::updateTiles()
 template<typename T>
 int ImageGridComponent<T>::getStartPosition() const
 {
+	// The "partialRow" variable exist because we want to keep the same positioning behavior in both
+	// case, whenever we have an integer number of rows or not (the last partial row is ignored when
+	// calculating position and the cursor shouldn't end up in this row when close to the end)
+	int partialRow = (int)mLastRowPartial;
+	if ((int)mEntries.size() < mGridDimension.x() * (mGridDimension.y() - (int)mLastRowPartial))
+		partialRow = 0;
+
 	int cursorRow = mCursor / mGridDimension.x();
 
-	int start = (cursorRow - (mGridDimension.y() / 2)) * mGridDimension.x();
+	int start = (cursorRow - ((mGridDimension.y() - partialRow) / 2)) * mGridDimension.x();
 
 	// If we are at the end put the row as close as we can and no higher, using the following formula
 	// Where E is the nb of entries, X the grid x dim (nb of column), Y the grid y dim (nb of line)
 	// start = first tile of last row - nb column * (nb line - 1)
 	//       = (E - 1) / X * X        - X * (Y - 1)
 	//       = X * ((E - 1) / X - Y + 1)
-	if(start + (mGridDimension.x() * mGridDimension.y()) >= (int)mEntries.size())
-		start = mGridDimension.x() * (((int)mEntries.size() - 1) / mGridDimension.x() - mGridDimension.y() + 1);
+	if(start + (mGridDimension.x() * (mGridDimension.y() - partialRow)) >= (int)mEntries.size())
+		start = mGridDimension.x() * (((int)mEntries.size() - 1) / mGridDimension.x() - mGridDimension.y() + 1 + partialRow);
 
 	if(start < 0)
 		start = 0;
@@ -377,9 +404,20 @@ void ImageGridComponent<T>::calcGridDimension()
 	// <=> COLUMNS = (GRID_SIZE + MARGIN) / (TILE_SIZE + MARGIN)
 	Vector2f gridDimension = (mSize + mMargin) / (mTileSize + mMargin);
 
-	mGridDimension = mScrollDirection == SCROLL_VERTICALLY ?
-					 Vector2i(gridDimension.x(), gridDimension.y()) :
-					 Vector2i(gridDimension.y(), gridDimension.x());
+	// Invert dimensions for horizontally scrolling grid
+	if (mScrollDirection == SCROLL_HORIZONTALLY)
+		gridDimension = Vector2f(gridDimension.y(), gridDimension.x());
+
+	mLastRowPartial = Math::floorf(gridDimension.y()) != gridDimension.y();
+
+	// Ceil y dim so we can display partial last row
+	mGridDimension = Vector2i(gridDimension.x(), Math::ceilf(gridDimension.y()));
+
+	// Grid dimension validation
+	if (mGridDimension.x() < 1)
+		LOG(LogError) << "Theme defined grid X dimension below 1";
+	if (mGridDimension.y() < 1)
+		LOG(LogError) << "Theme defined grid Y dimension below 1";
 };
 
 
