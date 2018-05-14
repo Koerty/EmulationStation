@@ -5,6 +5,7 @@
 #include "FileData.h"
 #include "GuiComponent.h"
 #include "Renderer.h"
+#include "Sound.h"
 
 class ThemeData;
 class Window;
@@ -24,7 +25,7 @@ public:
 	virtual void onFileChanged(FileData* file, FileChangeType change) = 0;
 	
 	// Called whenever the theme changes.
-	virtual void onThemeChanged(const std::shared_ptr<ThemeData>& theme) = 0;
+	virtual void onThemeChanged(const std::shared_ptr<ThemeData>& theme);
 
 	void setTheme(const std::shared_ptr<ThemeData>& theme);
 	inline const std::shared_ptr<ThemeData>& getTheme() const { return mTheme; }
@@ -39,11 +40,13 @@ public:
 	virtual void launch(FileData* game) = 0;
 
 	virtual HelpStyle getHelpStyle() override;
+	const std::shared_ptr<Sound>& getMenuOpenSound() { return mMenuOpenSound; }
 
 	void render(const Transform4x4f& parentTrans) override;
 protected:
 	FileData* mRoot;
 	std::shared_ptr<ThemeData> mTheme;
+	std::shared_ptr<Sound> mMenuOpenSound;
 };
 
 #endif // ES_APP_VIEWS_GAME_LIST_IGAME_LIST_VIEW_H

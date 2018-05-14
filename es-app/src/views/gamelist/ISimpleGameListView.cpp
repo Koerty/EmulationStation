@@ -30,6 +30,8 @@ ISimpleGameListView::ISimpleGameListView(Window* window, FileData* root) : IGame
 
 void ISimpleGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 {
+	IGameListView::onThemeChanged(theme);
+
 	using namespace ThemeFlags;
 	mBackground.applyTheme(theme, getName(), "background", ALL);
 	mHeaderImage.applyTheme(theme, getName(), "logo", ALL);

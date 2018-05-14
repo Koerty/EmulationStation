@@ -359,7 +359,9 @@ bool ViewController::input(InputConfig* config, Input input)
 	// open menu
 	if(config->isMappedTo("start", input) && input.value != 0)
 	{
-		// open menu
+		if (mCurrentView != mSystemListView)
+			std::static_pointer_cast<IGameListView>(mCurrentView)->getMenuOpenSound()->play();
+
 		mWindow->pushGui(new GuiMenu(mWindow));
 		return true;
 	}
