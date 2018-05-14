@@ -39,6 +39,9 @@ protected:
 	std::vector<GuiComponent*> mThemeExtras;
 
 	std::stack<FileData*> mCursorStack;
+
+	std::shared_ptr<Sound> launchSound;
+	std::shared_ptr<Sound> backSound;
 };
 
 #endif // ES_APP_VIEWS_GAME_LIST_ISIMPLE_GAME_LIST_VIEW_H

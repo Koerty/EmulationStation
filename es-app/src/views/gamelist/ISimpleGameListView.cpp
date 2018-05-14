@@ -35,6 +35,9 @@ void ISimpleGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme
 	mHeaderImage.applyTheme(theme, getName(), "logo", ALL);
 	mHeaderText.applyTheme(theme, getName(), "logoText", ALL);
 
+	launchSound = Sound::getFromTheme(getTheme(), getName(), "launch");
+	backSound = Sound::getFromTheme(getTheme(), getName(), "back");
+
 	// Remove old theme extras
 	for (auto extra : mThemeExtras)
 	{
@@ -85,7 +88,7 @@ bool ISimpleGameListView::input(InputConfig* config, Input input)
 			FileData* cursor = getCursor();
 			if(cursor->getType() == GAME)
 			{
-				Sound::getFromTheme(getTheme(), getName(), "launch")->play();
+				launchSound->play();
 				launch(cursor);
 			}else{
 				// it's a folder
@@ -101,12 +104,12 @@ bool ISimpleGameListView::input(InputConfig* config, Input input)
 			return true;
 		}else if(config->isMappedTo("b", input))
 		{
+			backSound->play();
 			if(mCursorStack.size())
 			{
 				populateList(mCursorStack.top()->getParent()->getChildren());
 				setCursor(mCursorStack.top());
 				mCursorStack.pop();
-				Sound::getFromTheme(getTheme(), getName(), "back")->play();
 			}else{
 				onFocusLost();
 				SystemData* systemToView = getCursor()->getSystem();
