@@ -8,16 +8,20 @@ GridTileComponent::GridTileComponent(Window* window) : GuiComponent(window), mBa
 {
 	mDefaultProperties.mSize = getDefaultTileSize();
 	mDefaultProperties.mPadding = Vector2f(16.0f, 16.0f);
+	mDefaultProperties.mImageMinSize = false;
 	mDefaultProperties.mImageColor = 0xAAAAAABB;
 	mDefaultProperties.mBackgroundImage = ":/frame.png";
+	mDefaultProperties.mBackgroundFitToContent = false;
 	mDefaultProperties.mBackgroundCornerSize = Vector2f(16 ,16);
 	mDefaultProperties.mBackgroundCenterColor = 0xAAAAEEFF;
 	mDefaultProperties.mBackgroundEdgeColor = 0xAAAAEEFF;
 
 	mSelectedProperties.mSize = getSelectedTileSize();
 	mSelectedProperties.mPadding = mDefaultProperties.mPadding;
+	mSelectedProperties.mImageMinSize = false;
 	mSelectedProperties.mImageColor = 0xFFFFFFFF;
 	mSelectedProperties.mBackgroundImage = mDefaultProperties.mBackgroundImage;
+	mSelectedProperties.mBackgroundFitToContent = false;
 	mSelectedProperties.mBackgroundCornerSize = mDefaultProperties.mBackgroundCornerSize;
 	mSelectedProperties.mBackgroundCenterColor = 0xFFFFFFFF;
 	mSelectedProperties.mBackgroundEdgeColor = 0xFFFFFFFF;
@@ -73,11 +77,17 @@ void GridTileComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, cons
 		if (elem->has("imageColor"))
 			mDefaultProperties.mImageColor = elem->get<unsigned int>("imageColor");
 
+		if (elem->has("imageMinSize"))
+			mDefaultProperties.mImageMinSize = elem->get<bool>("imageMinSize");
+
 		if (elem->has("backgroundImage"))
 			mDefaultProperties.mBackgroundImage = elem->get<std::string>("backgroundImage");
 
 		if (elem->has("backgroundCornerSize"))
 			mDefaultProperties.mBackgroundCornerSize = elem->get<Vector2f>("backgroundCornerSize");
+
+		if (elem->has("backgroundFitToContent"))
+			mDefaultProperties.mBackgroundFitToContent = elem->get<bool>("backgroundFitToContent");
 
 		if (elem->has("backgroundColor"))
 		{
@@ -108,6 +118,10 @@ void GridTileComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, cons
 	if (elem && elem->has("imageColor"))
 		mSelectedProperties.mImageColor = elem->get<unsigned int>("imageColor");
 
+	mSelectedProperties.mImageMinSize = elem && elem->has("imageMinSize") ?
+										elem->get<bool>("imageMinSize") :
+										mDefaultProperties.mImageMinSize;
+
 	mSelectedProperties.mBackgroundImage = elem && elem->has("backgroundImage") ?
 										   elem->get<std::string>("backgroundImage") :
 										   mDefaultProperties.mBackgroundImage;
@@ -115,6 +129,10 @@ void GridTileComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, cons
 	mSelectedProperties.mBackgroundCornerSize = elem && elem->has("backgroundCornerSize") ?
 												elem->get<Vector2f>("backgroundCornerSize") :
 												mDefaultProperties.mBackgroundCornerSize;
+
+	mSelectedProperties.mBackgroundFitToContent = elem && elem->has("backgroundFitToContent") ?
+												  elem->get<bool>("backgroundFitToContent") :
+												  mDefaultProperties.mBackgroundFitToContent;
 
 	if (elem && elem->has("backgroundColor"))
 	{
@@ -178,9 +196,18 @@ void GridTileComponent::resize()
 {
 	const GridTileProperties& currentProperties = getCurrentProperties();
 
-	mImage->setMaxSize(currentProperties.mSize - currentProperties.mPadding * 2);
+	if (currentProperties.mImageMinSize)
+		mImage->setMinSize(currentProperties.mSize - currentProperties.mPadding * 2);
+	else
+		mImage->setMaxSize(currentProperties.mSize - currentProperties.mPadding * 2);
+
 	mBackground.setCornerSize(currentProperties.mBackgroundCornerSize);
-	mBackground.fitTo(currentProperties.mSize - mBackground.getCornerSize() * 2);
+
+	// Fit to the grid tile content, otherwise fit to the grid tile size
+	if (currentProperties.mBackgroundFitToContent)
+		mBackground.fitTo(mImage->getSize());// - mBackground.getCornerSize());
+	else
+		mBackground.fitTo(currentProperties.mSize - mBackground.getCornerSize() * 2);
 }
 
 const GridTileProperties& GridTileComponent::getCurrentProperties() const

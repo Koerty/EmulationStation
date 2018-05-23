@@ -9,8 +9,10 @@ struct GridTileProperties
 {
 	Vector2f mSize;
 	Vector2f mPadding;
+	bool mImageMinSize;
 	unsigned int mImageColor;
 	std::string mBackgroundImage;
+	bool mBackgroundFitToContent;
 	Vector2f mBackgroundCornerSize;
 	unsigned int mBackgroundCenterColor;
 	unsigned int mBackgroundEdgeColor;
