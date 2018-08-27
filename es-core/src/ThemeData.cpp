@@ -31,7 +31,8 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "margin", NORMALIZED_PAIR },
 		{ "gameImage", PATH },
 		{ "folderImage", PATH },
-		{ "scrollDirection", STRING } } },
+		{ "scrollDirection", STRING },
+		{ "cursorAlwaysCentered", BOOLEAN } } },
 	{ "gridtile", {
 		{ "size", NORMALIZED_PAIR },
 		{ "padding", NORMALIZED_PAIR },

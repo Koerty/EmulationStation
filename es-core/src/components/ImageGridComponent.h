@@ -70,6 +70,7 @@ private:
 	std::string mDefaultFolderTexture;
 
 	// TILES
+	bool mCursorAlwaysCentered;
 	bool mLastRowPartial;
 	Vector2f mMargin;
 	Vector2f mTileSize;
@@ -92,6 +93,7 @@ ImageGridComponent<T>::ImageGridComponent(Window* window) : IList<ImageGridData,
 	mDefaultGameTexture = ":/cartridge.svg";
 	mDefaultFolderTexture = ":/folder.svg";
 
+	mCursorAlwaysCentered = false;
 	mSize = screen * 0.80f;
 	mMargin = screen * 0.07f;
 	mTileSize = GridTileComponent::getDefaultTileSize();
@@ -255,6 +257,9 @@ void ImageGridComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, 
 				}
 			}
 		}
+
+		if (elem->has("cursorAlwaysCentered"))
+			mCursorAlwaysCentered = elem->get<bool>("cursorAlwaysCentered");
 	}
 
 	// We still need to manually get the grid tile size here,
@@ -431,19 +436,22 @@ int ImageGridComponent<T>::getStartPosition() const
 	// Number of tiles which are just used as a buffer for texture loading
 	int bufferSize = texBuffersForward[3] * mGridDimension.x();
 
-	if(start + (mGridDimension.x() * (mGridDimension.y() - partialRow)) >= (int)mEntries.size() + bufferSize)
+	if (!mCursorAlwaysCentered)
 	{
-		// If we are at the end put the row as close as we can and no higher, using the following formula
-		// Where E is the nb of entries, X the grid x dim (nb of column), Y the grid y dim (nb of line)
-		// start = first tile of last row - nb column * (nb line - 1)
-		//       = (E - 1) / X * X        - X * (Y - 1)
-		//       = X * ((E - 1) / X - Y + 1)
-		start = mGridDimension.x() * (((int)mEntries.size() - 1) / mGridDimension.x() - mGridDimension.y() + 1 + partialRow) + bufferSize;
-	}
+		if(start + (mGridDimension.x() * (mGridDimension.y() - partialRow)) >= (int)mEntries.size() + bufferSize)
+		{
+			// If we are at the end put the row as close as we can and no higher, using the following formula
+			// Where E is the nb of entries, X the grid x dim (nb of column), Y the grid y dim (nb of line)
+			// start = first tile of last row - nb column * (nb line - 1)
+			//       = (E - 1) / X * X        - X * (Y - 1)
+			//       = X * ((E - 1) / X - Y + 1)
+			start = mGridDimension.x() * (((int)mEntries.size() - 1) / mGridDimension.x() - mGridDimension.y() + 1 + partialRow) + bufferSize;
+		}
 
-	if(start < -bufferSize)
-	{
-		start = -bufferSize;
+		if(start < -bufferSize)
+		{
+			start = -bufferSize;
+		}
 	}
 
 	return start;

@@ -591,6 +591,8 @@ Can be created as an extra.
     - The default image used for folders which doesn't have an image.
 * `scrollDirection` - type: STRING.
     - `vertical` by default, can also be set to `horizontal`. Not that in `horizontal` mod, the tiles are ordered from top to bottom, then from left to right.
+* `cursorAlwaysCentered` - type: BOOLEAN
+    - `false` by default. If set to `true`, the cursor will also stay in the center row when close to the beginning or the end.
 
 #### gridtile
 
