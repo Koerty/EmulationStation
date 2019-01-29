@@ -55,8 +55,10 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	addChild(&mLblPlayCount);
 	addChild(&mPlayCount);
 	mCursorPosition.setText("");
+	mCursorPosition.setPosition(mSize.x(), mSize.y());
 	addChild(&mCursorPosition);
 	mGameCount.setText("");
+	mGameCount.setPosition(mSize.x(), mSize.y());
 	addChild(&mGameCount);
 
 	mName.setPosition(mSize.x(), mSize.y());
