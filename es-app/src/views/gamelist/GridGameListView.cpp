@@ -17,7 +17,7 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 
 	mRating(window), mReleaseDate(window), mDeveloper(window), mPublisher(window),
 	mGenre(window), mPlayers(window), mLastPlayed(window), mPlayCount(window),
-	mName(window)
+	mName(window), mCursorPosition(window), mGameCount(window)
 {
 	const float padding = 0.01f;
 
@@ -125,6 +125,7 @@ void GridGameListView::populateList(const std::vector<FileData*>& files)
 	{
 		addPlaceholder();
 	}
+	mGameCount.setText(std::to_string(mGrid.getEntryCount()));
 }
 
 void GridGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
@@ -264,6 +265,8 @@ void GridGameListView::updateInfoPanel()
 
 		fadingOut = false;
 	}
+
+	mCursorPosition.setValue(std::to_string(mGrid.getCursorPosition()));
 
 	std::vector<GuiComponent*> comps = getMDValues();
 	comps.push_back(&mDescription);
