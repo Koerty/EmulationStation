@@ -120,9 +120,9 @@ void Window::input(InputConfig* config, Input input)
 		if(mScreenSaver->isScreenSaverActive() && Settings::getInstance()->getBool("ScreenSaverControls") &&
 		   (Settings::getInstance()->getString("ScreenSaverBehavior") == "random video"))
 		{
-			if(mScreenSaver->getCurrentGame() != NULL && (config->isMappedTo("right", input) || config->isMappedTo("start", input) || config->isMappedTo("select", input)))
+			if(mScreenSaver->getCurrentGame() != NULL && (config->isMappedLike("right", input) || config->isMappedTo("start", input) || config->isMappedTo("select", input)))
 			{
-				if(config->isMappedTo("right", input) || config->isMappedTo("select", input))
+				if(config->isMappedLike("right", input) || config->isMappedTo("select", input))
 				{
 					if (input.value != 0) {
 						// handle screensaver control
@@ -209,7 +209,7 @@ void Window::update(int deltaTime)
 			// vram
 			float textureVramUsageMb = TextureResource::getTotalMemUsage() / 1000.0f / 1000.0f;
 			float textureTotalUsageMb = TextureResource::getTotalTextureSize() / 1000.0f / 1000.0f;
-			float fontVramUsageMb = Font::getTotalMemUsage() / 1000.0f / 1000.0f;;
+			float fontVramUsageMb = Font::getTotalMemUsage() / 1000.0f / 1000.0f;
 
 			ss << "\nFont VRAM: " << fontVramUsageMb << " Tex VRAM: " << textureVramUsageMb <<
 				  " Tex Max: " << textureTotalUsageMb;

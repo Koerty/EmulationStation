@@ -64,7 +64,8 @@ const std::map<PlatformId, const char*> gamesdb_platformid_map {
 	{ PLAYSTATION_VITA, "Sony Playstation Vita" },
 	{ PLAYSTATION_PORTABLE, "Sony Playstation Portable" },
 	{ SUPER_NINTENDO, "Super Nintendo (SNES)" },
-	{ TURBOGRAFX_16, "TurboGrafx 16" },
+	{ TURBOGRAFX_16, "TurboGrafx 16" }, // HuCards only
+	{ TURBOGRAFX_CD, "TurboGrafx CD" }, // CD-ROMs only
 	{ WONDERSWAN, "WonderSwan" },
 	{ WONDERSWAN_COLOR, "WonderSwan Color" },
 	{ ZX_SPECTRUM, "Sinclair ZX Spectrum" },
@@ -84,12 +85,12 @@ void thegamesdb_generate_scraper_requests(const ScraperSearchParams& params, std
 	if (!cleanName.empty() && cleanName.substr(0,3) == "id:")
 	{
 		std::string gameID = cleanName.substr(3);
-		path = "thegamesdb.net/api/GetGame.php?id=" + HttpReq::urlEncode(gameID);
+		path = "legacy.thegamesdb.net/api/GetGame.php?id=" + HttpReq::urlEncode(gameID);
 		usingGameID = true;
 	}else{
 		if (cleanName.empty())
 			cleanName = params.game->getCleanName();
-		path += "thegamesdb.net/api/GetGamesList.php?name=" + HttpReq::urlEncode(cleanName);
+		path += "legacy.thegamesdb.net/api/GetGamesList.php?name=" + HttpReq::urlEncode(cleanName);
 	}
 
 	if(usingGameID)
@@ -201,7 +202,7 @@ void TheGamesDBRequest::processList(const pugi::xml_document& xmldoc, std::vecto
 	for(int i = 0; game && i < MAX_SCRAPER_RESULTS; i++)
 	{
 		std::string id = game.child("id").text().get();
-		std::string path = "thegamesdb.net/api/GetGame.php?id=" + id;
+		std::string path = "legacy.thegamesdb.net/api/GetGame.php?id=" + id;
 
 		mRequestQueue->push(std::unique_ptr<ScraperRequest>(new TheGamesDBRequest(results, path)));
 

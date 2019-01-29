@@ -134,11 +134,12 @@ void Settings::setDefaults()
 		mStringMap["AudioDevice"] = "Master";
 	#endif
 
+	mStringMap["AudioCard"] = "default";
 	mStringMap["UIMode"] = "Full";
 	mStringMap["UIMode_passkey"] = "uuddlrlrba";
 	mBoolMap["ForceKiosk"] = false;
 	mBoolMap["ForceKid"] = false;
-	mBoolMap["hideQuitMenuOnKidUI"] = false;
+	mBoolMap["ForceDisableFilters"] = false;
 
 	mIntMap["WindowWidth"]   = 0;
 	mIntMap["WindowHeight"]  = 0;

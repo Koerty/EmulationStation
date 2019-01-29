@@ -49,7 +49,7 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	addChild(&mPlayers);
 	mLblLastPlayed.setText("Last played: ");
 	addChild(&mLblLastPlayed);
-	mLastPlayed.setDisplayMode(DateTimeComponent::DISP_RELATIVE_TO_NOW);
+	mLastPlayed.setDisplayRelative(true);
 	addChild(&mLastPlayed);
 	mLblPlayCount.setText("Times played: ");
 	addChild(&mLblPlayCount);
@@ -104,7 +104,7 @@ std::string GridGameListView::getQuickSystemSelectLeftButton()
 
 bool GridGameListView::input(InputConfig* config, Input input)
 {
-	if(config->isMappedTo("left", input) || config->isMappedTo("right", input))
+	if(config->isMappedLike("left", input) || config->isMappedLike("right", input))
 		return GuiComponent::input(config, input);
 
 	return ISimpleGameListView::input(config, input);
@@ -368,7 +368,8 @@ std::vector<HelpPrompt> GridGameListView::getHelpPrompts()
 	prompts.push_back(HelpPrompt("up/down/left/right", "choose"));
 	prompts.push_back(HelpPrompt("a", "launch"));
 	prompts.push_back(HelpPrompt("b", "back"));
-	prompts.push_back(HelpPrompt("select", "options"));
+	if(!UIModeController::getInstance()->isUIModeKid())
+		prompts.push_back(HelpPrompt("select", "options"));
 	if(mRoot->getSystem()->isGameSystem())
 		prompts.push_back(HelpPrompt("x", "random"));
 	if(mRoot->getSystem()->isGameSystem() && !UIModeController::getInstance()->isUIModeKid())
