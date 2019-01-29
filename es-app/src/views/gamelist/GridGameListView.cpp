@@ -54,6 +54,10 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	mLblPlayCount.setText("Times played: ");
 	addChild(&mLblPlayCount);
 	addChild(&mPlayCount);
+	mCursorPosition.setText("");
+	addChild(&mCursorPosition);
+	mGameCount.setText("");
+	addChild(&mGameCount);
 
 	mName.setPosition(mSize.x(), mSize.y());
 	mName.setDefaultZIndex(40);
