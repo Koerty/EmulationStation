@@ -50,6 +50,9 @@ public:
 
 	ImageGridComponent(Window* window);
 
+	int getEntryCount();
+	int getCursorPosition();
+
 	void add(const std::string& name, const std::string& imagePath, const T& obj);
 
 	bool input(InputConfig* config, Input input) override;
@@ -78,6 +81,7 @@ private:
 
 	// IMAGES & ENTRIES
 	bool mEntriesDirty;
+	int mEntryCount;
 	int mLastCursor;
 	std::string mDefaultGameTexture;
 	std::string mDefaultFolderTexture;
@@ -122,6 +126,7 @@ ImageGridComponent<T>::ImageGridComponent(Window* window) : IList<ImageGridData,
 	mStartPosition = 0;
 
 	mEntriesDirty = true;
+	mEntryCount = 0;
 	mLastCursor = 0;
 	mDefaultGameTexture = ":/cartridge.svg";
 	mDefaultFolderTexture = ":/folder.svg";
@@ -139,6 +144,18 @@ ImageGridComponent<T>::ImageGridComponent(Window* window) : IList<ImageGridData,
 }
 
 template<typename T>
+int ImageGridComponent<T>::getEntryCount()
+{
+	return mEntryCount;
+}
+
+template<typename T>
+int ImageGridComponent<T>::getCursorPosition()
+{
+	return mLastCursor;
+}
+
+template<typename T>
 void ImageGridComponent<T>::add(const std::string& name, const std::string& imagePath, const T& obj)
 {
 	typename IList<ImageGridData, T>::Entry entry;
@@ -148,6 +165,7 @@ void ImageGridComponent<T>::add(const std::string& name, const std::string& imag
 
 	static_cast<IList< ImageGridData, T >*>(this)->add(entry);
 	mEntriesDirty = true;
+	mEntryCount++;
 }
 
 template<typename T>
