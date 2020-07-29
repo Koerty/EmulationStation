@@ -8,6 +8,7 @@
 #include "Settings.h"
 
 #include <SDL.h>
+#include <SDL_mixer.h>
 #include <stack>
 
 namespace Renderer
@@ -67,6 +68,13 @@ namespace Renderer
 			return false;
 		}
 
+		if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) != 0)
+		{
+			LOG(LogError) << "Error initializing SDL Mixer!\n	" << Mix_GetError();
+			return false;
+		}
+		Mix_AllocateChannels(64);
+
 		initialCursorState = (SDL_ShowCursor(0) != 0);
 
 		SDL_DisplayMode dispMode;
@@ -107,6 +115,7 @@ namespace Renderer
 		sdlWindow = nullptr;
 
 		SDL_ShowCursor(initialCursorState);
+		Mix_CloseAudio();
 
 		SDL_Quit();
 
