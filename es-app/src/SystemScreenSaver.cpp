@@ -183,7 +183,6 @@ void SystemScreenSaver::stopScreenSaver()
 {
 	if ((mBackgroundAudio) && (mStopBackgroundAudio))
 	{
-		mBackgroundAudio->stop();
 		mBackgroundAudio.reset();
 		// if we were playing audio, we paused PS
 		PowerSaver::resume();
@@ -233,15 +232,6 @@ void SystemScreenSaver::renderScreenSaver()
 
 				Transform4x4f transform = Transform4x4f::Identity();
 				mImageScreensaver->render(transform);
-			}
-		}
-
-		// Check if we need to restart the background audio
-		if ((mBackgroundAudio) && (Settings::getInstance()->getString("SlideshowScreenSaverBackgroundAudioFile") != ""))
-		{
-			if (!mBackgroundAudio->isPlaying())
-			{
-				mBackgroundAudio->play();
 			}
 		}
 	}

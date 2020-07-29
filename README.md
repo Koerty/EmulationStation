@@ -14,7 +14,7 @@ EmulationStation has a few dependencies. For building, you'll need CMake, SDL2, 
 **On Debian/Ubuntu:**
 All of this be easily installed with `apt-get`:
 ```bash
-sudo apt-get install libsdl2-dev libfreeimage-dev libfreetype6-dev libcurl4-openssl-dev rapidjson-dev \
+sudo apt-get install libsdl2-dev libsdl2-mixer-dev libfreeimage-dev libfreetype6-dev libcurl4-openssl-dev rapidjson-dev \
   libasound2-dev libgl1-mesa-dev build-essential cmake fonts-droid-fallback libvlc-dev \
   libvlccore-dev vlc-bin
 ```
