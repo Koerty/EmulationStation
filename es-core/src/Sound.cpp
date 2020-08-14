@@ -68,8 +68,6 @@ void Sound::deinit()
 	Mix_FreeChunk(mSound);
 }
 
-int channel = 0;
-
 void Sound::play()
 {
 	if(!Settings::getInstance()->getBool("EnableSounds"))
