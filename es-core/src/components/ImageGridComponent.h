@@ -43,6 +43,7 @@ protected:
 	using IList<ImageGridData, T>::mCursor;
 	using IList<ImageGridData, T>::Entry;
 	using IList<ImageGridData, T>::mWindow;
+	using IList<ImageGridData, T>::getCurrentSoundVolume;
 
 public:
 	using IList<ImageGridData, T>::size;
@@ -64,7 +65,7 @@ public:
 	ImageSource	getImageSource() { return mImageSource; };
 
 protected:
-	virtual void onScroll(int /*amt*/) { if(!mScrollSound.empty()) Sound::get(mScrollSound)->play(); }
+	virtual void onScroll(int /*amt*/) { if(!mScrollSound.empty()) Sound::get(mScrollSound)->play(getCurrentSoundVolume()); }
 	virtual void onCursorChanged(const CursorState& state) override;
 
 private:
