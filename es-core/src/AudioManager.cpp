@@ -29,11 +29,11 @@ std::shared_ptr<AudioManager> & AudioManager::getInstance()
 	return sInstance;
 }
 
-void AudioManager::playSound(Mix_Chunk *sound)
+void AudioManager::playSound(Mix_Chunk *sound, float volume)
 {
 	if(sound)
 	{
-		Mix_VolumeChunk(sound, MIX_MAX_VOLUME);
+		Mix_VolumeChunk(sound, (int) (MIX_MAX_VOLUME * volume));
 		Mix_PlayChannel(mChannel, sound, 0);
 		mChannel = (mChannel + 1) % MAX_CHANNEL;
 	}

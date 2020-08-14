@@ -27,7 +27,7 @@ public:
 
 	void loadFile(const std::string & path);
 
-	void play();
+	void play(float volume = 1.0f);
 
 private:
 	Sound(const std::string & path = "");

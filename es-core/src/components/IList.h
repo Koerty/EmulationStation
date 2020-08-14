@@ -23,6 +23,7 @@ struct ScrollTier
 {
 	int length; // how long we stay on this level before going to the next
 	int scrollDelay; // how long between scrolls
+	float soundVolume; // how loud is the scroll sound, range is [0.0f ; 1.0f]
 };
 
 struct ScrollTierList
@@ -33,16 +34,16 @@ struct ScrollTierList
 
 // default scroll tiers
 const ScrollTier QUICK_SCROLL_TIERS[] = {
-	{500, 500},
-	{2000, 114},
-	{4000, 32},
-	{0, 16}
+	{500, 500, 1.0f},
+	{2000, 114, 0.9f},
+	{4000, 32, 0.2f},
+	{0, 16, 0.05f}
 };
 const ScrollTierList LIST_SCROLL_STYLE_QUICK = { 4, QUICK_SCROLL_TIERS };
 
 const ScrollTier SLOW_SCROLL_TIERS[] = {
-	{500, 500},
-	{0, 200}
+	{500, 500, 1.0f},
+	{0, 200, 0.9f}
 };
 const ScrollTierList LIST_SCROLL_STYLE_SLOW = { 2, SLOW_SCROLL_TIERS };
 
@@ -307,6 +308,11 @@ protected:
 
 	virtual void onCursorChanged(const CursorState& /*state*/) {}
 	virtual void onScroll(int /*amt*/) {}
+
+	float getCurrentSoundVolume()
+	{
+		return mTierList.tiers[mScrollTier].soundVolume;
+	}
 };
 
 #endif // ES_CORE_COMPONENTS_ILIST_H

@@ -69,10 +69,10 @@ void Sound::deinit()
 	Mix_FreeChunk(mSound);
 }
 
-void Sound::play()
+void Sound::play(float volume)
 {
 	if(!Settings::getInstance()->getBool("EnableSounds"))
 		return;
 
-	AudioManager::getInstance()->playSound(mSound);
+	AudioManager::getInstance()->playSound(mSound, volume);
 }

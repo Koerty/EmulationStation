@@ -30,6 +30,7 @@ protected:
 	using IList<TextListData, T>::mSize;
 	using IList<TextListData, T>::mCursor;
 	using IList<TextListData, T>::Entry;
+	using IList<TextListData, T>::getCurrentSoundVolume;
 
 public:
 	using IList<TextListData, T>::size;
@@ -80,7 +81,7 @@ public:
 	inline void setLineSpacing(float lineSpacing) { mLineSpacing = lineSpacing; }
 
 protected:
-	virtual void onScroll(int /*amt*/) { if(!mScrollSound.empty()) Sound::get(mScrollSound)->play(); }
+	virtual void onScroll(int /*amt*/) { if(!mScrollSound.empty()) Sound::get(mScrollSound)->play(getCurrentSoundVolume()); }
 	virtual void onCursorChanged(const CursorState& state);
 
 private:

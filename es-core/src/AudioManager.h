@@ -22,7 +22,7 @@ public:
 
 	virtual ~AudioManager();
 
-	void playSound(Mix_Chunk *sound);
+	void playSound(Mix_Chunk *sound, float volume);
 };
 
 #endif // ES_CORE_AUDIO_MANAGER_H
