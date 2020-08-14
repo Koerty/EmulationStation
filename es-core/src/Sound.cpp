@@ -3,6 +3,7 @@
 #include "Log.h"
 #include "Settings.h"
 #include "ThemeData.h"
+#include "AudioManager.h"
 
 std::map< std::string, std::shared_ptr<Sound> > Sound::sMap;
 
@@ -73,10 +74,5 @@ void Sound::play()
 	if(!Settings::getInstance()->getBool("EnableSounds"))
 		return;
 
-	if(mSound)
-	{
-		Mix_VolumeChunk(mSound, MIX_MAX_VOLUME);
-		Mix_PlayChannel(channel, mSound, 0);
-		channel = (channel + 1) % 64;
-	}
+	AudioManager::getInstance()->playSound(mSound);
 }
