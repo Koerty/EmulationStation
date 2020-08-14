@@ -22,6 +22,7 @@ public:
 
 	virtual ~AudioManager();
 
+	void deinit();
 	void playSound(Mix_Chunk *sound, float volume);
 };
 

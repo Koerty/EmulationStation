@@ -7,7 +7,7 @@ std::shared_ptr<AudioManager> AudioManager::sInstance;
 
 AudioManager::AudioManager() : mChannel(0)
 {
-	if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) != 0)
+	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) != 0)
 		LOG(LogError) << "Error initializing SDL Mixer!\n	" << Mix_GetError();
 
 	Mix_AllocateChannels(MAX_CHANNEL);
@@ -15,23 +15,29 @@ AudioManager::AudioManager() : mChannel(0)
 
 AudioManager::~AudioManager()
 {
-	// TODO: use Mix_ChannelFinished to wait for the launch sound to finish
-	Mix_CloseAudio();
-	sInstance = NULL;
+	deinit();
 }
 
 std::shared_ptr<AudioManager> & AudioManager::getInstance()
 {
 	//check if an AudioManager instance is already created, if not create one
-	if (sInstance == nullptr && Settings::getInstance()->getBool("EnableSounds"))
+	if (sInstance == nullptr)
 		sInstance = std::shared_ptr<AudioManager>(new AudioManager);
 
 	return sInstance;
 }
 
+void AudioManager::deinit()
+{
+	// TODO: use Mix_ChannelFinished to wait for the launch sound to finish
+	//Mix_ChannelFinished()
+	Mix_CloseAudio();
+	sInstance = nullptr;
+}
+
 void AudioManager::playSound(Mix_Chunk *sound, float volume)
 {
-	if(sound)
+	if (sound && Settings::getInstance()->getBool("EnableSounds"))
 	{
 		Mix_VolumeChunk(sound, (int) (MIX_MAX_VOLUME * volume));
 		Mix_PlayChannel(mChannel, sound, 0);
