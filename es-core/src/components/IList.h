@@ -35,15 +35,15 @@ struct ScrollTierList
 // default scroll tiers
 const ScrollTier QUICK_SCROLL_TIERS[] = {
 	{500, 500, 1.0f},
-	{2000, 114, 0.9f},
-	{4000, 32, 0.2f},
-	{0, 16, 0.05f}
+	{2000, 114, 0.8f},
+	{4000, 32, 0.4f},
+	{0, 16, 0.2f}
 };
 const ScrollTierList LIST_SCROLL_STYLE_QUICK = { 4, QUICK_SCROLL_TIERS };
 
 const ScrollTier SLOW_SCROLL_TIERS[] = {
 	{500, 500, 1.0f},
-	{0, 200, 0.9f}
+	{0, 200, 0.8f}
 };
 const ScrollTierList LIST_SCROLL_STYLE_SLOW = { 2, SLOW_SCROLL_TIERS };
 
